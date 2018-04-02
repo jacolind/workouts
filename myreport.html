@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>{{ title }}</title>
+</head>
+
+<body>
+    <h2>Header</h2>
+     {{ df_head }}
+
+     <h2>Weeks w/o training</h2>
+     Weeks with no training:
+     {{empty_weeks}}
+     out of
+     {{nrweeks}}.
+
+     <h2>Image</h2>
+     Here is an image
+     <img src="plots/image.jpg">
+
+     Summary of my stretching length (minutes).
+     {{ stretch_describe }}
+
+     Last six days of training:
+     {{ recent_entries }}
+
+
+</body>
+
+</html>
