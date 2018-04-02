@@ -10,6 +10,8 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 ## import data
 
@@ -26,14 +28,16 @@ n = df.shape[0]
 
 ## rename columns
 
-colnames = ['IDnumber', 'Date', 'Yoga', 'Cardio_time', 'Legsfront', 'Legsback',
-       'Ass', 'Calf', 'Back', 'Biceps', 'Chest', 'Shoulders', 'Triceps',
-       'Other', 'Muscles_time', 'Stretch_time', 'Notes',
-       'StartDate(TC)', 'SubmitDate(TC)', 'NetworkID']
+colnames = ['IDnumber', 'Date', 'Yoga', 'Cardio_time', 'Legsfront',
+            'Legsback', 'Ass', 'Calf', 'Back', 'Biceps', 'Chest',
+            'Shoulders','Triceps',
+           'Other', 'Muscles_time', 'Stretch_time', 'Notes',
+           'StartDate(TC)', 'SubmitDate(TC)', 'NetworkID']
 df.columns = colnames
 
 # convert date dtype 
 df.Date = pd.to_datetime(df.Date)
+df.Date.dt.year.min() > 2016
 
 ## keep only some columns
 
@@ -41,6 +45,8 @@ keepcols = ['Date', 'Yoga', 'Cardio_time', 'Legsfront', 'Legsback',
        'Ass', 'Calf', 'Back', 'Biceps', 'Chest', 'Shoulders', 'Triceps',
        'Other', 'Muscles_time', 'Stretch_time', 'Notes']
 df = df[keepcols]
+
+df.Date.dt.year.min() > 2016
 
 ## Create binary variables and recode NaN
 
@@ -50,6 +56,13 @@ binaryvars = ['Legsfront', 'Legsback', 'Ass', 'Calf', 'Back',
 df[binaryvars] = df[binaryvars].notnull().astype(int)
 # map from NaN to 0. this affects e.g. Cardio_time, Other and Notes.
 df.fillna(0, inplace=True)
+
+df.Date.dt.year.min() > 2015 # somehow fillna fucked this up 
+dayafter = df.loc[df.Date.dt.year < 2017].index + 1
+df.loc[dayafter, 'Date']
+df.loc[df.Date.dt.year < 2017, 'Date'] = pd.to_datetime('2017-12-05')# quick fix 
+df.Date.dt.year.min() > 2015
+
 
 ##  Explanation of why I need to create these varaibles
 
@@ -76,6 +89,8 @@ df['Legday'] = ( df['Legsfront'] +
                  df['Ass']
                 ) > 0
 
+df.Date.dt.year.min() > 2016
+
 # mutually exclusive
 # there are rows with both Leg day and chest day.
 chest_and_legday = df[(df['Chestday'] == True) 
@@ -92,7 +107,22 @@ sum(df['Chestday'])
 sum(df['Legday'])
 n
 
+df.Date.dt.year.min() > 2016
+
+## yoga is alway 55 min 
+
+df.loc[df.Yoga == 1, 'Training_time'] = 55
+
+## all my notes 
+
+df.loc[df.Notes != 0, 'Notes']
+
+# because I was lazy in the data entry phase
+
 ## create variable: Daycategory
+
+df.Date.dt.year.min() > 2016
+
 
 # less than cardiothreshold minutes of cardio is merely warmup
 cardiothreshold = 30
@@ -119,9 +149,9 @@ def daycategorizer(row):
 df['Daycategory'] = df.apply(daycategorizer, axis=1)
 # type is categorical
 df['Daycategory'] = df['Daycategory'].astype('category')
-# frequency table
-print(df['Daycategory'].value_counts() / df['Daycategory'].count() * 100)
-# concl: good split of types
+
+df.Date.dt.year.min() > 2016
+
 
 ## create variable: Training_time
 
@@ -131,26 +161,87 @@ df['Training_time'] = df['Cardio_time'] + df['Muscles_time'] + df['Stretch_time'
 
 df['Week'] = df['Date'].dt.week
 
-## Is Training_time related to category?
+## create col YearWeek 
 
-df.pivot_table(index='Daycategory', values='Training_time', aggfunc='mean')
+df['YearWeek'] = df.Date.dt.year + df.Week/100
+df.YearWeek.nunique() 
+# todo: there are weeks when i do not workout. these become hiddne. can be solved by using another dataframe as an index. 
+
+
+## resample by week 
+ts = pd.Series(df.Training_time.values / 60, index = df.Date)
+nrweeks = ts.resample('W').sum().count()
+
+## plot nr of workouts / week
+ts.resample('W').count().plot()
+plt.ylabel('Nr of workouts')
+plt.title('Nr of wourkouts per week \n (Line is median)')
+plt.axhline(y = ts.resample('W').count().median())
+# todo make line dotted
+
+## plot sum of time / week 
+tsw_sum = ts.resample('W').sum()
+tsw_sum.plot()
+plt.title('Sum of training time per week')
+plt.ylabel('Hours')
+
+## weeks without training
+tsw_sum.isnull().sum() / nrweeks*100
+sum(tsw_sum == 0)
+# todo: zero and NA, whats the diff?
+# which weeks:
+tsw_sum[tsw_sum == 0]
+tsw_sum[tsw_sum.isnull() == True]
+# how many weeks:
+empty_weeks =  tsw_sum[tsw_sum == 0].shape[0] + tsw_sum[tsw_sum.isnull() == True].shape[0]
+print("weeks without training:", empty_weeks, "out of", nrweeks)
+
+# todo: calculate streak lengths. hint: when cumsum today = cumsaum yesterday a streak has begun 
+
+
+
+'''
+scratch-pad
+inte så intressanta 
+# plot training time / month 
+ts.resample('M').sum().plot()
+plt.title('Sum of training time per month')
+plt.ylabel('Hours')
+
+ts.resample('M').mean().plot()
+plt.title('Sum of training time / nr sessions, per month')
+plt.ylabel('Hours')
+
+weeks = pd.date_range('2017-01-01', 
+                      pd.to_datetime('today'), 
+                      freq='W-SUN')
+'''
+
+## daycategory pie
+tab_freq = df['Daycategory'].value_counts() / df['Daycategory'].count() * 100
+tab_freq
+tab_freq.plot.pie(autopct='%.0f')
+plt.title('Daycategory: Equal split?')
+plt.ylabel('')
+# maybe use: labels = df.groupby('Daycategory').size() 
+# todo: sns piechart look beetter?
+# make it Leg 20% and n=10 so that we understand it immediately 
+# todo: insert nr of datapoints as labels. 
+
+## Training_time by daycategory?
+time_bycat = df.pivot_table(index='Daycategory', 
+                            values='Training_time', aggfunc='mean')
+time_bycat = time_bycat.sort_values(by='Training_time', ascending=False)
+time_bycat.plot.barh()
+plt.xlabel('Mean Training_time')
+plt.title('Mean Training_time by category')
 
 # todo: more pivot tables. ask questions.
 
-## Histograms of training time
-
-from scipy import stats, integrate
-import matplotlib.pyplot as plt
-import seaborn as sns
+## training time per session
 
 # Hist for total time
 sns.distplot(df.Training_time, kde=False)
-# pd.DataFrame.hist(df, column='Training_time')
-# concl: I see two groups. maybe legday is a long workout and chestday is shorter.
-
-# Hist by daycateogry
-# pd.DataFrame.hist(df, column='Training_time', by='Daycategory')
-# this histogram has too few datapoints - must split by legday/chestday instead
 
 # Hist for legdays
 sns.distplot(df.loc[df.Legday == 1, 'Muscles_time'])
@@ -160,9 +251,20 @@ plt.title('Muscles_time for Legdays')
 sns.distplot(df.loc[df.Chestday == 1, 'Muscles_time'])
 plt.title('Muscles_time for Chestdays')
 
+# Hist for backdays
+sns.distplot(df.loc[df.Back == 1, 'Muscles_time'])
+plt.title('Muscles_time for Backdays')
+
+# Hist of Cardio_time (ignoring warmups)
+cardiothreshold = 30
+sns.distplot(df.loc[df.Cardio_time > cardiothreshold, 'Cardio_time'])
+plt.title('Cardio_time (when it is >)', cardiothreshold)
+
 # Stretch_time
 print(df['Stretch_time'].describe())
 # concl: Stretch_time must go up! stretch every session!
+
+# todo: CDF instead of historigram 
 
 ## Last 6 traning sessions - this decides what next excerceise will be
 
@@ -172,36 +274,14 @@ print(df[['Date', 'Daycategory', 'Training_time']].head(6))
 ## Variability 
 
 df.Daycategory.values # if two consecutive days have the same training the =1. sum all 1's. / n. it is a measure. 
+# todo skriv kod. kanske genom lagga ena sen jämföra dom två som lista 
 
-## Days since last training
+# Days since last training
+print("Days since last training:",
+      pd.to_datetime('today') - pd.to_datetime(df.loc[0, 'Date']))
 
-pd.to_datetime('today') - pd.to_datetime(df.loc[0, 'Date'])
+## qq data error to fix 
 
-## How much cardio per week?
-
-# Hist of Cardio_time (ignoring warmups)
-cardiothreshold
-pd.DataFrame.hist(df[df.Cardio_time > cardiothreshold], column='Cardio_time for cardio sessions')
-
-# Cardio_time and Muscles_time, per week
-tbl1 = pd.pivot_table(df, index='Week',
-                          values=['Cardio_time', 'Muscles_time'],
-                          aggfunc='sum')
-tbl1= tbl1 / 60
-tbl1.plot()
-plt.title('Total training hours per week')
-print("Hours per week \n", tbl1.describe())
-
-# number of weeks with no cardio for an entire week
-tbl1[tbl1.Cardio_time == 0].Cardio_time.count()
-# fraction of weeks with cardio
-n_days = (df['Date'].max() - df['Date'].min())
-n_days = (n_days / np.timedelta64(1, 'D')).astype(int)
-n_weeks = n_days / 7
-print(tbl1[tbl1.Cardio_time == 0].Cardio_time.count() / n_weeks * 100)
-# concl: too many weeks that I do zero cardio!
-
-# qq data error to fix 
 df.loc[df.Date.idxmin(), 'Date']
-# if date = 1 then set = previous+1 (as a heuristic).
-df.loc[df.Date.idxmax(), 'Date']
+# if date = 1 then set date = submission date. Must use df raw because column in thrown out 
+df.loc[df.Date.idxmin(), 'Date'] = df_raw.loc[df_raw.Date.idxmin(), 'submission date ']
