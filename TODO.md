@@ -1,12 +1,4 @@
-# git refresh
-
-1) stage git, with
-commit: split do-file into: clean1 clean2 merge.
-
-2) delete do1 do3
-commit: delete do1 do3
-
-3) läs denna todo.md och inuti eda.py finns todo oxå.
+läs denna todo.md och inuti eda.py finns todo oxå.
 rimligtivs bör saker flyttas från todo.md till readme.me ang split av två olika datasets.
 
 # continous data stream
