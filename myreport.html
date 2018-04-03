@@ -7,24 +7,33 @@
 </head>
 
 <body>
-    <h2>Header</h2>
+    <h2>Table structure</h2>
      {{ df_head }}
 
-     <h2>Weeks w/o training</h2>
+     <h2>Aggreggated (all time)</h2>
      Weeks with no training:
      {{empty_weeks}}
      out of
      {{nrweeks}}.
 
-     <h2>Image</h2>
-     Here is an image
-     <img src="plots/image.jpg">
+     <img src="plots/daycategory_pie.jpg">
+
+     <h2>Per week</h2>
+
+     <img src="plots/hours_perweek.jpg">
+     <img src="plots/nr_perweek.jpg">
+
+     <h2>Per workout</h2>
+
+     <img src="plots/time_bycategory.jpg">
+     <img src="plots/time_hist.jpg">
 
      Summary of my stretching length (minutes).
      {{ stretch_describe }}
 
      Last six days of training:
      {{ recent_entries }}
+
 
 
 </body>

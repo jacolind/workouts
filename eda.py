@@ -1,149 +1,16 @@
-## about
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Tue Apr  3 18:07:00 2018
 
-# Data comes from my training log.
-# Search for "concl:" in order to find actionable insights
-
-## directory
-
-## packages
-
-import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-## import data
-
-# cd to folder /Documents/python/trainingdata/
-df_raw = pd.read_csv('data/Traaining.1.csv', parse_dates=True)
-
-# todo: import automatically using https://github.com/underdogio/typeform
-
-# Remove test entries
-# first real training date is 2017-01-17 on row 3. entries 0:2 are tests
-df = df_raw.drop(df_raw.tail(3).index)
-# nr of workouts
-n = df.shape[0]
-
-# rename columns
-colnames = ['IDnumber', 'Date', 'Yoga', 'Cardio_time', 'Legsfront',
-            'Legsback', 'Ass', 'Calf', 'Back', 'Biceps', 'Chest',
-            'Shoulders','Triceps',
-           'Other', 'Muscles_time', 'Stretch_time', 'Notes',
-           'StartDate(TC)', 'SubmitDate(TC)', 'NetworkID']
-df.columns = colnames
-
-# convert date dtype
-df.Date = pd.to_datetime(df.Date)
-
-# keep only some columns
-keepcols = ['Date', 'Yoga', 'Cardio_time', 'Legsfront', 'Legsback',
-       'Ass', 'Calf', 'Back', 'Biceps', 'Chest', 'Shoulders', 'Triceps',
-       'Other', 'Muscles_time', 'Stretch_time', 'Notes', 'Submit Date (UTC)']
-df = df[keepcols]
-
-## Create binary variables and recode NaN
-
-# map binaryvars from not NaN to 1.
-binaryvars = ['Legsfront', 'Legsback', 'Ass', 'Calf', 'Back',
-             'Biceps', 'Chest', 'Shoulders', 'Triceps']
-df[binaryvars] = df[binaryvars].notnull().astype(int)
-# map from NaN to 0. this affects e.g. Cardio_time, Other and Notes.
-df.fillna(0, inplace=True)
-
-df.Date.dt.year.min() > 2015 # somehow fillna fucked this up
-dayafter = df.loc[df.Date.dt.year < 2017].index + 1
-df.loc[dayafter, 'Date']
-df.loc[df.Date.dt.year < 2017, 'Date'] = pd.to_datetime('2017-12-05')# quick fix
-df.Date.dt.year.min() > 2015
+@author: j
+"""
 
 
-##  Explanation of why I need to create these varaibles
+## yoga is alway 55 min
 
-'''
-From df.head() we see 'Chest'='NaN' when I have not trained my chest,
-and 'Chest'='Bröst' when I have trained chest (bröst is swedish for chest).
-df.info() reveals the same problem: dtype=objects but I want dtype=float64
-Hence we must map from 'NaN' to 0, and from 'some-text-not-NaN' to 1.
+df.loc[df.Yoga == 1, 'Training_time'] = 55
 
-Why did this problem occur?
-In typeform I have a multiple choice question,
-apparently when downloading to csv each choice is converted to a variable.
-'''
-
-
-
-
-
-######################################################################
-
-
-## Chestday Legday Backday
-
-# It is chestday if I have done any of these: Chest, Triceps
-df['Chestday'] = ( (df['Chest'] == 1) +
-                   (df['Triceps'] == 1) 
-                  ) > 0
-# It is legday if I have done any of these: Legsfront, Legsback, Calf.
-df['Legday'] = ( df['Legsfront'] +
-                 df['Legsback'] +
-                 df['Ass']
-                ) > 0
-
-df['Backday'] = df['Back']
-df['Lats'] = np.nan
-df['Spine'] = np.nan
-df['Deltoid'] = np.nan
-
-df.Date.dt.year.min() > 2016
-
-## create variable: Daycategory
-
-df.Date.dt.year.min() > 2016
-
-# less than cardiothreshold minutes of cardio is merely warmup
-cardiothreshold = 30
-
-# function to go from binary variables to a categorical variable
-def daycategorizer(row):
-    if (row['Cardio_time'] > cardiothreshold) & (row['Muscles_time'] > 10):
-        day = 'Cardio_and_Muscle'
-    elif row['Cardio_time'] > cardiothreshold:
-        day = 'Cardio'
-    elif row['Chestday'] == True:
-        day = 'Chest'
-    elif row['Legday'] == True:
-        day = 'Leg'
-    elif row['Backday'] == True:
-        day = 'Back'
-    elif row['Yoga'] == 1:
-        day = 'Yoga'
-    else:
-        day = 'Other' #
-    return day
-
-# go from binary variables to a categorical variable
-df['Daycategory'] = df.apply(daycategorizer, axis=1)
-# type is categorical
-df['Daycategory'] = df['Daycategory'].astype('category')
-
-df.Date.dt.year.min() > 2016
-
-
-## create variable: Training_time
-
-df['Training_time'] = df['Cardio_time'] + df['Muscles_time'] + df['Stretch_time']
-
-## create variable: week
-
-df['Week'] = df['Date'].dt.week
-
-## create col YearWeek
-
-df['YearWeek'] = df.Date.dt.year + df.Week/100
-df.YearWeek.nunique()
-# todo: there are weeks when i do not workout. these become hiddne. can be solved by using another dataframe as an index.
 
 # mutually exclusive
 # there are rows with both Leg day and chest day.
@@ -163,10 +30,6 @@ sum(df['Legday'])
 n
 
 df.Date.dt.year.min() > 2016
-
-## yoga is alway 55 min
-
-df.loc[df.Yoga == 1, 'Training_time'] = 55
 
 ## all my notes
 

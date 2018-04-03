@@ -9,8 +9,7 @@ env = Environment(loader=FileSystemLoader('.'))
 template = env.get_template("myreport.html")
 
 # define content in the file
-template_vars = {"title" : "Sales Funnel Report - National",
-                 "national_pivot_table": sales_report.to_html(),
+template_vars = {"title" : "Workout summary report",
                  "empty_weeks": str(empty_weeks),
                  "nrweeks": str(nrweeks), # qq can i remove this line?
                  #"df_head": df_head.to_html()
