@@ -11,6 +11,7 @@ Created on Tue Apr  3 18:07:00 2018
 
 df.loc[df.Yoga == 1, 'Training_time'] = 55
 
+## check daycategory 
 
 # mutually exclusive
 # there are rows with both Leg day and chest day.
@@ -39,10 +40,12 @@ df.loc[df.Notes != 0, 'Notes']
 
 
 ## resample by week
+
 ts = pd.Series(df.Training_time.values / 60, index = df.Date)
 nrweeks = ts.resample('W').sum().count()
 
 ## plot nr of workouts / week
+
 ts.resample('W').count().plot()
 plt.ylabel('Nr of workouts per week')
 plt.title('Nr of wourkouts per week \n (Line is median)')
@@ -51,6 +54,7 @@ plt.xlabel('')
 plt.savefig('plots/nr_perweek.png')
 
 ## plot sum of time / week
+
 tsw_sum = ts.resample('W').sum()
 tsw_sum.plot()
 plt.title('Sum of training time per week')
@@ -59,6 +63,7 @@ plt.xlabel('')
 plt.savefig('plots/hours_perweek.png')
 
 ## weeks without training
+
 tsw_sum.isnull().sum() / nrweeks*100
 sum(tsw_sum == 0)
 # todo: zero and NA, whats the diff?
@@ -70,7 +75,6 @@ empty_weeks =  tsw_sum[tsw_sum == 0].shape[0] + tsw_sum[tsw_sum.isnull() == True
 print("weeks without training:", empty_weeks, "out of", nrweeks)
 
 # todo: calculate streak lengths. hint: when cumsum today = cumsaum yesterday a streak has begun
-
 
 
 '''
@@ -91,6 +95,7 @@ weeks = pd.date_range('2017-01-01',
 '''
 
 ## daycategory pie
+
 tab_freq = df['Daycategory'].value_counts() / df['Daycategory'].count() * 100
 tab_freq
 tab_freq.plot.pie(autopct='%.0f')
@@ -103,6 +108,7 @@ plt.savefig('plots/daycategory_pie.png')
 # todo: insert nr of datapoints as labels.
 
 ## Training_time by daycategory?
+
 time_bycat = df.pivot_table(index='Daycategory',
                             values='Training_time', aggfunc='mean')
 time_bycat = time_bycat.sort_values(by='Training_time', ascending=False)
@@ -141,23 +147,19 @@ cardiothreshold = 30
 sns.distplot(df.loc[df.Cardio_time > cardiothreshold, 'Cardio_time'])
 plt.title('Cardio_time (when it is >)', cardiothreshold)
 
-# todo: do many kde in one single plot 
+# todo: do many kde in one single plot
+# attempt 1
 sns.distplot(df.loc[df.Legday == 1, 'Muscles_time'])
 sns.distplot(df.loc[df.Chestday == 1, 'Muscles_time'])
 sns.distplot(df.loc[df.Back == 1, 'Muscles_time'])
-
-
-# Stretch_time
-print(df['Stretch_time'].describe())
-stretch_describe =  [df.Stretch_time.quantile(0.25),
-                     df.Stretch_time.quantile(0.50),
-                     df.Stretch_time.quantile(0.75)]
-stretch_describe = 'Percentiles: 25% ' + str(stretch_describe[0]) + ', 
-                                 50% ' + str(stretch_describe[1]) + ', 
-                                 75% ' + str(stretch_describe[2])
-stretch_describe
-
-# concl: Stretch_time must go up! stretch every session!
+# attempt 2
+sns.kdeplot(df.loc[df.Legday == 1, 'Muscles_time'])
+sns.kdeplot(df.loc[df.Chestday == 1, 'Muscles_time'])
+sns.kdeplot(df.loc[df.Back == 1, 'Muscles_time'])
+# attempt 3
+fig, ax = plt.subplots()
+sns.kdeplot(df['Muscle_time'], ax=ax)
+sns.kdeplot(df['Training_time'], ax=ax)
 
 # todo: CDF instead of histogram
 # attempt 1
@@ -168,6 +170,18 @@ fig, axes = plt.subplots(nrows=2, ncols=1)
 df.fraction.plot(ax=axes[0], kind='hist', normed=True, bins=30, range=(0,.3)) #play around with options 
 df.fraction.plot(ax=axes[1], kind='hist', normed=True, cumulative=True)
 plt.show()
+
+## Stretch_time
+
+df['Stretch_time'].describe()
+stretch_describe =  [df.Stretch_time.quantile(0.25),
+                     df.Stretch_time.quantile(0.50),
+                     df.Stretch_time.quantile(0.75)]
+stretch_describe = 'Percentiles: 25% ' + str(stretch_describe[0]) + ', 
+                                 50% ' + str(stretch_describe[1]) + ', 
+                                 75% ' + str(stretch_describe[2])
+stretch_describe
+# concl: Stretch_time must go up! stretch every session!
 
 ## Last 6 traning sessions - this decides what next excerceise will be
 
