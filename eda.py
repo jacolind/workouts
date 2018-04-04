@@ -160,9 +160,14 @@ stretch_describe
 # concl: Stretch_time must go up! stretch every session!
 
 # todo: CDF instead of histogram
-# attempt below
+# attempt 1
 df.Muscles_time.hist(cumulative=True, normed=1)
 df.loc[df.Cardio_time > cardiothreshold, 'Muscles_time'].hist(cumulative=True, normed=1)
+# attempt 2
+fig, axes = plt.subplots(nrows=2, ncols=1)
+df.fraction.plot(ax=axes[0], kind='hist', normed=True, bins=30, range=(0,.3)) #play around with options 
+df.fraction.plot(ax=axes[1], kind='hist', normed=True, cumulative=True)
+plt.show()
 
 ## Last 6 traning sessions - this decides what next excerceise will be
 
