@@ -152,12 +152,17 @@ print(df['Stretch_time'].describe())
 stretch_describe =  [df.Stretch_time.quantile(0.25),
                      df.Stretch_time.quantile(0.50),
                      df.Stretch_time.quantile(0.75)]
-stretch_describe = 'Percentiles: 25% ' + str(stretch_describe[0]) +                    ', 50% ' + str(stretch_describe[1]) + ', 75% ' + str(stretch_describe[2])
+stretch_describe = 'Percentiles: 25% ' + str(stretch_describe[0]) + ', 
+                                 50% ' + str(stretch_describe[1]) + ', 
+                                 75% ' + str(stretch_describe[2])
 stretch_describe
 
 # concl: Stretch_time must go up! stretch every session!
 
-# todo: CDF instead of historigram
+# todo: CDF instead of histogram
+# attempt below
+df.Muscles_time.hist(cumulative=True, normed=1)
+df.loc[df.Cardio_time > cardiothreshold, 'Muscles_time'].hist(cumulative=True, normed=1)
 
 ## Last 6 traning sessions - this decides what next excerceise will be
 
@@ -169,7 +174,6 @@ recent_entries
 ## Variability
 
 daycat_dummy = pd.get_dummies(df.Daycategory.values)
-daycat_dummy.head() 
 daycat_dummy.shift(1).head() # lag 1 day
 variability = (daycat_dummy + daycat_dummy.shift(1) == 2).sum()
 print("output shows how many times a certain daycategory has been followed by the same daycategory (e.g. legday two days in a row")
@@ -179,5 +183,3 @@ variability
 # Days since last training
 print("Days since last training:",
       pd.to_datetime('today') - pd.to_datetime(df.loc[0, 'Date']))
-
-
