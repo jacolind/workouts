@@ -12,8 +12,7 @@ creates some basic columns
 ## Merge 
 
 # assert they have the same cols 
-assert set(df1.columns) - set(df2.columns) == set()
-assert set(df2.columns) - set(df1.columns) == set()
+assert set(df1.columns) == set(df2.columns)
 
 # stack datasets on top of each other 
 df = pd.concat([df1, df2])
@@ -57,7 +56,7 @@ def daycategorizer(row):
     elif row['Yoga'] == 1:
         day = 'Yoga'
     else:
-        day = 'Other' #
+        day = 'Other' 
     return day
 
 # go from binary variables to a categorical variable
