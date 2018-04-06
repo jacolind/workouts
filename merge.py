@@ -35,7 +35,6 @@ df['Legday'] = ( df['Legsfront'] +
                  df['Ass']
                 ) > 0
 
-
 ## create variable: Daycategory
 
 # less than cardiothreshold minutes of cardio is merely warmup
@@ -63,6 +62,8 @@ def daycategorizer(row):
 df['Daycategory'] = df.apply(daycategorizer, axis=1)
 df['Daycategory'] = df['Daycategory'].astype('category')
 
+# remove vars we do not need 
+df.drop(['Legday', 'Chestday', 'Backday'], inplace=True)
 
 ## create variable: Training_time
 
